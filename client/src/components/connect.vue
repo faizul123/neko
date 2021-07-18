@@ -2,8 +2,8 @@
   <div class="connect">
     <div class="window">
       <div class="logo">
-        <img src="@/assets/images/logo.svg" alt="n.eko" />
-        <span><b>n</b>.eko</span>
+        <img src="@/assets/images/landing-logo.png" alt="willshare" />
+        <span>willshare</span>
       </div>
       <form class="message" v-if="!connecting" @submit.stop.prevent="connect">
         <span>{{ $t('connect.title') }}</span>
