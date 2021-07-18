@@ -27,8 +27,7 @@
         </div>
       </main>
       <neko-side v-if="!hideControls && side" />
-      <neko-connect v-if="!connected" />
-      <neko-about v-if="about" />
+      <neko-connect v-if="!connected" />      
       <notifications
         v-if="!hideControls"
         group="neko"
@@ -151,8 +150,7 @@
   import Side from '~/components/side.vue'
   import Controls from '~/components/controls.vue'
   import Members from '~/components/members.vue'
-  import Emotes from '~/components/emotes.vue'
-  import About from '~/components/about.vue'
+  import Emotes from '~/components/emotes.vue'  
   import Header from '~/components/header.vue'
   import Unsupported from '~/components/unsupported.vue'
 
@@ -165,8 +163,7 @@
       'neko-side': Side,
       'neko-controls': Controls,
       'neko-members': Members,
-      'neko-emotes': Emotes,
-      'neko-about': About,
+      'neko-emotes': Emotes,      
       'neko-header': Header,
       'neko-unsupported': Unsupported,
     },
@@ -191,10 +188,6 @@
 
       this.shakeKbd = true
       window.setTimeout(() => (this.shakeKbd = false), 5000)
-    }
-
-    get about() {
-      return this.$accessor.client.about
     }
 
     get side() {
