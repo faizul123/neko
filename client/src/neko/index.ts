@@ -45,7 +45,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     const url =
       process.env.NODE_ENV === 'development'
         ? `ws://${location.host.split(':')[0]}:${process.env.VUE_APP_SERVER_PORT}/`
-        : `${/https/gi.test(location.protocol) ? 'wss' : 'ws'}://${location.host}/`
+        : `${/https/gi.test(location.protocol) ? 'wss' : 'ws'}://${location.host}/${location.pathname}`
 
     this.connect(url, password, displayname)
   }
