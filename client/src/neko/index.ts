@@ -18,6 +18,7 @@ import {
   ControlClipboardPayload,
   ScreenConfigurationsPayload,
   ScreenResolutionPayload,
+  BroadcastStatusPayload,
   AdminPayload,
   AdminTargetPayload,
 } from './messages'
@@ -27,10 +28,21 @@ interface NekoEvents extends BaseEvents {}
 export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   private $vue!: Vue
   private $accessor!: typeof accessor
+  private url!: string
 
   init(vue: Vue) {
+    const url =
+      process.env.NODE_ENV === 'development'
+        ? `ws://${location.host.split(':')[0]}:${process.env.VUE_APP_SERVER_PORT}/ws`
+        : location.protocol.replace(/^http/, 'ws') + '//' + location.host + location.pathname.replace(/\/$/, '') + '/ws'
+
+    this.initWithURL(vue, url)
+  }
+
+  initWithURL(vue: Vue, url: string) {
     this.$vue = vue
     this.$accessor = vue.$accessor
+    this.url = url
   }
 
   private cleanup() {
@@ -42,12 +54,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   login(password: string, displayname: string) {
-    const url =
-      process.env.NODE_ENV === 'development'
-        ? `ws://${location.host.split(':')[0]}:${process.env.VUE_APP_SERVER_PORT}/`
-        : `${/https/gi.test(location.protocol) ? 'wss' : 'ws'}://${location.host}/${location.pathname.substring(1)}`
-
-    this.connect(url, password, displayname)
+    this.connect(this.url, password, displayname)
   }
 
   logout() {
@@ -63,6 +70,16 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   /////////////////////////////
   // Internal Events
   /////////////////////////////
+  protected [EVENT.RECONNECTING]() {
+    this.$vue.$notify({
+      group: 'neko',
+      type: 'warning',
+      title: this.$vue.$t('connection.reconnecting') as string,
+      duration: 5000,
+      speed: 1000,
+    })
+  }
+
   protected [EVENT.CONNECTING]() {
     this.$accessor.setConnnecting()
   }
@@ -70,7 +87,11 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   protected [EVENT.CONNECTED]() {
     this.$accessor.user.setMember(this.id)
     this.$accessor.setConnected(true)
-    this.$accessor.setConnected(true)
+
+    this.$vue.$notify({
+      group: 'neko',
+      clean: true,
+    })
 
     this.$vue.$notify({
       group: 'neko',
@@ -83,6 +104,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
 
   protected [EVENT.DISCONNECTED](reason?: Error) {
     this.cleanup()
+
     this.$vue.$notify({
       group: 'neko',
       type: 'error',
@@ -109,7 +131,13 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   // System Events
   /////////////////////////////
   protected [EVENT.SYSTEM.DISCONNECT]({ message }: DisconnectPayload) {
+    if (message == 'kicked') {
+      this.$accessor.logout()
+      message = this.$vue.$t('connection.kicked') as string
+    }
+
     this.onDisconnected(new Error(message))
+
     this.$vue.$swal({
       title: this.$vue.$t('connection.disconnected'),
       text: message,
@@ -176,7 +204,9 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       this.$vue.$notify({
         group: 'neko',
         type: 'info',
-        title: this.$vue.$t('notifications.controls_taken', { name: this.$vue.$t('you') }) as string,
+        title: this.$vue.$t('notifications.controls_taken', {
+          name: member.id == this.id && this.$vue.$te('you') ? this.$vue.$t('you') : member.displayname,
+        }) as string,
         duration: 5000,
         speed: 1000,
       })
@@ -201,7 +231,9 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       this.$vue.$notify({
         group: 'neko',
         type: 'info',
-        title: this.$vue.$t('notifications.controls_released', { name: this.$vue.$t('you') }) as string,
+        title: this.$vue.$t('notifications.controls_released', {
+          name: member.id == this.id && this.$vue.$te('you') ? this.$vue.$t('you') : member.displayname,
+        }) as string,
         duration: 5000,
         speed: 1000,
       })
@@ -258,7 +290,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.$accessor.chat.newMessage({
       id,
       content: this.$vue.$t('notifications.controls_given', {
-        name: member.id == this.id ? this.$vue.$t('you') : member.displayname,
+        name: member.id == this.id && this.$vue.$te('you') ? this.$vue.$t('you') : member.displayname,
       }) as string,
       type: 'event',
       created: new Date(),
@@ -327,6 +359,13 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   /////////////////////////////
+  // Broadcast Events
+  /////////////////////////////
+  protected [EVENT.BROADCAST.STATUS](payload: BroadcastStatusPayload) {
+    this.$accessor.settings.broadcastStatus(payload)
+  }
+
+  /////////////////////////////
   // Admin Events
   /////////////////////////////
   protected [EVENT.ADMIN.BAN]({ id, target }: AdminTargetPayload) {
@@ -342,7 +381,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.$accessor.chat.newMessage({
       id,
       content: this.$vue.$t('notifications.banned', {
-        name: member.id == this.id ? this.$vue.$t('you') : member.displayname,
+        name: member.id == this.id && this.$vue.$te('you') ? this.$vue.$t('you') : member.displayname,
       }) as string,
       type: 'event',
       created: new Date(),
@@ -362,7 +401,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.$accessor.chat.newMessage({
       id,
       content: this.$vue.$t('notifications.kicked', {
-        name: member.id == this.id ? this.$vue.$t('you') : member.displayname,
+        name: member.id == this.id && this.$vue.$te('you') ? this.$vue.$t('you') : member.displayname,
       }) as string,
       type: 'event',
       created: new Date(),
@@ -384,7 +423,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.$accessor.chat.newMessage({
       id,
       content: this.$vue.$t('notifications.muted', {
-        name: member.id == this.id ? this.$vue.$t('you') : member.displayname,
+        name: member.id == this.id && this.$vue.$te('you') ? this.$vue.$t('you') : member.displayname,
       }) as string,
       type: 'event',
       created: new Date(),
@@ -406,7 +445,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.$accessor.chat.newMessage({
       id,
       content: this.$vue.$t('notifications.unmuted', {
-        name: member.id == this.id ? this.$vue.$t('you') : member.displayname,
+        name: member.id == this.id && this.$vue.$te('you') ? this.$vue.$t('you') : member.displayname,
       }) as string,
       type: 'event',
       created: new Date(),
@@ -455,7 +494,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.$accessor.chat.newMessage({
       id,
       content: this.$vue.$t('notifications.controls_taken_steal', {
-        name: member.id == this.id ? this.$vue.$t('you') : member.displayname,
+        name: member.id == this.id && this.$vue.$te('you') ? this.$vue.$t('you') : member.displayname,
       }) as string,
       type: 'event',
       created: new Date(),
@@ -482,7 +521,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.$accessor.chat.newMessage({
       id,
       content: this.$vue.$t('notifications.controls_released_steal', {
-        name: member.id == this.id ? this.$vue.$t('you') : member.displayname,
+        name: member.id == this.id && this.$vue.$te('you') ? this.$vue.$t('you') : member.displayname,
       }) as string,
       type: 'event',
       created: new Date(),
@@ -505,7 +544,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.$accessor.chat.newMessage({
       id,
       content: this.$vue.$t('notifications.controls_given', {
-        name: member.id == this.id ? this.$vue.$t('you') : member.displayname,
+        name: member.id == this.id && this.$vue.$te('you') ? this.$vue.$t('you') : member.displayname,
       }) as string,
       type: 'event',
       created: new Date(),

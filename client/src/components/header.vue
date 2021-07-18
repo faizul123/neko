@@ -1,8 +1,8 @@
 <template>
   <div class="header">
     <div class="neko">
-      <img src="@/assets/images/landing-logo.png" alt="willshare" />
-      <span>willshare</span>
+      <img src="@/assets/images/logo.svg" alt="n.eko" />
+      <span><b>n</b>.eko</span>
     </div>
     <ul class="menu">
       <li>
@@ -15,8 +15,8 @@
                 ? $t('room.unlock')
                 : $t('room.lock')
               : locked
-              ? $t('room.unlocked')
-              : $t('room.locked'),
+              ? $t('room.locked')
+              : $t('room.unlocked'),
             placement: 'bottom',
             offset: 5,
             boundariesElement: 'body',
@@ -25,6 +25,7 @@
         />
       </li>
       <li>
+        <span v-if="showBadge" class="badge">&bull;</span>
         <i class="fas fa-bars toggle" @click="toggleMenu" />
       </li>
     </ul>
@@ -94,6 +95,40 @@
         .toggle {
           background: $background-primary;
         }
+
+        .badge {
+          position: absolute;
+          background: red;
+          font-weight: bold;
+          font-size: 1.25em;
+          border-radius: 50%;
+          width: 20px;
+          height: 20px;
+          text-align: center;
+          line-height: 20px;
+          pointer-events: none;
+
+          transform: translate(-50%, -25%) scale(1);
+          box-shadow: 0 0 0 0 rgba(0, 0, 0, 1);
+          animation: badger-pulse 2s infinite;
+        }
+
+        @keyframes badger-pulse {
+          0% {
+            transform: translate(-50%, -25%) scale(0.85);
+            box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
+          }
+
+          70% {
+            transform: translate(-50%, -25%) scale(1);
+            box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+          }
+
+          100% {
+            transform: translate(-50%, -25%) scale(0.85);
+            box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+          }
+        }
       }
     }
   }
@@ -112,8 +147,22 @@
       return this.$accessor.locked
     }
 
+    get side() {
+      return this.$accessor.client.side
+    }
+
+    get texts() {
+      return this.$accessor.chat.texts
+    }
+
+    get showBadge() {
+      return !this.side && this.readTexts != this.texts
+    }
+
+    readTexts: number = 0
     toggleMenu() {
       this.$accessor.client.toggleSide()
+      this.readTexts = this.texts
     }
 
     toggleLock() {

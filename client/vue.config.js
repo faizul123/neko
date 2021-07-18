@@ -2,16 +2,17 @@ const path = require('path')
 
 module.exports = {
   productionSourceMap: false,
-  publicPath: './',
   css: {
     loaderOptions: {
       sass: {
-        prependData: `
+        additionalData: `
           @import "@/assets/styles/_variables.scss";
         `,
       },
     },
   },
+  publicPath: './',
+  assetsDir: './',
   configureWebpack: {
     resolve: {
       alias: {
@@ -20,4 +21,7 @@ module.exports = {
       },
     },
   },
+  devServer: {
+    disableHostCheck: true,
+  }
 }
