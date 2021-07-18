@@ -2,8 +2,7 @@
   <div class="connect">
     <div class="window">
       <div class="logo">
-        <img src="@/assets/images/logo.svg" alt="n.eko" />
-        <span><b>n</b>.eko</span>
+        <img src="@/assets/images/landing-logo.png" alt="willshare" />        
       </div>
       <form class="message" v-if="!connecting" @submit.stop.prevent="connect">
         <span v-if="!autoPassword">{{ $t('connect.login_title') }}</span>
