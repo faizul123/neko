@@ -1,6 +1,6 @@
 <template>
   <div ref="component" class="video">
-    <iframe :src="iframe.src" allow="camera *;audio *;"></iframe>
+    <iframe allow="camera *;audio *;" :src="iframe.src" ></iframe>
     <div ref="player" class="player">
       <div ref="container" class="player-container">
         <video ref="video" playsinline />
