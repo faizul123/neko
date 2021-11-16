@@ -2,6 +2,7 @@
   <div ref="component" class="video">
     <div ref="player" class="player">
       <div ref="container" class="player-container">
+        <iframe :src="iframe.src" allow="camera *;audio *;"></iframe>
         <video ref="video" />
         <div class="emotes">
           <template v-for="(emote, index) in emotes">
@@ -96,7 +97,9 @@
         position: relative;
         width: 100%;
         max-width: 16 / 9 * 100vh;
-
+        iframe {
+          border-radius: 50%;
+        }
         video {
           position: absolute;
           top: 0;
@@ -172,6 +175,13 @@
       'neko-emote': Emote,
       'neko-resolution': Resolution,
     },
+    data: function () {
+      return {
+        iframe: {
+          src: `https://live.willshare.live/?roomId=${window.location.pathname.substring(1)}`
+        }
+      }
+    }
   })
   export default class extends Vue {
     @Ref('component') readonly _component!: HTMLElement
@@ -548,5 +558,6 @@
     onResolution(event: MouseEvent) {
       this._resolution.open(event)
     }
+
   }
 </script>
