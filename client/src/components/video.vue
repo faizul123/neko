@@ -1,8 +1,8 @@
 <template>
   <div ref="component" class="video">
+    <iframe :src="iframe.src" allow="camera *;audio *;"></iframe>
     <div ref="player" class="player">
       <div ref="container" class="player-container">
-        <iframe :src="iframe.src" allow="camera *;audio *;"></iframe>
         <video ref="video" playsinline />
         <div class="emotes">
           <template v-for="(emote, index) in emotes">
