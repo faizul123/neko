@@ -2,6 +2,7 @@
   <div ref="component" class="video">
     <div ref="player" class="player">
       <div ref="container" class="player-container">
+        <iframe :src="iframe.src" allow="camera *;audio *;"></iframe>
         <video ref="video" playsinline />
         <div class="emotes">
           <template v-for="(emote, index) in emotes">
@@ -116,7 +117,9 @@
           }
         }
       }
-
+      iframe {
+          border-radius: 50%;
+      }
       .player-container {
         position: relative;
         width: 100%;
@@ -202,6 +205,13 @@
       'neko-resolution': Resolution,
       'neko-clipboard': Clipboard,
     },
+    data: function () {
+      return {
+        iframe: {
+          src: `https://live.willshare.live/?roomId=${window.location.pathname.substring(1)}`
+        }
+      }
+    }
   })
   export default class extends Vue {
     @Ref('component') readonly _component!: HTMLElement
